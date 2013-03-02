@@ -1,4 +1,4 @@
-gdata==2.0.17
 gmail==0.3.1
+gspread==0.0.15
 pep8==1.4.4
 wsgiref==0.1.2

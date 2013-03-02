@@ -1,3 +1,6 @@
+[General]
+spreadsheet: Document Name
+
 [Gmail]
-username: ''
-password: ''
+username: test@test.com
+password: your_password
