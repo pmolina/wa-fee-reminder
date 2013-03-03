@@ -7,6 +7,10 @@ import logging
 import codecs
 
 
+class WAException(Exception):
+    pass
+
+
 class FormatMessage(object):
     message = None
 
@@ -80,4 +84,4 @@ if __name__ == '__main__':
     try:
         main()
     except Exception, e:
-        raise
+        raise WAException(e)
