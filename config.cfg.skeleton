@@ -1,6 +1,7 @@
 [General]
 spreadsheet_name: Document Name
 worksheet_name: sheet1
+min_debt = 0
 
 [Gmail]
 username: test@test.com
