@@ -38,6 +38,7 @@ def main():
     spreadsheet_name = config.get('General', 'spreadsheet_name')
     worksheet_name = config.get('General', 'worksheet_name')
     min_debt = int(config.get('General', 'min_debt'))
+    max_debt = int(config.get('General', 'max_debt'))
     logging.debug(
         'Trying to use worksheet "%s" from spreadsheet "%s" ...'
         % (worksheet_name, spreadsheet_name)
@@ -53,7 +54,7 @@ def main():
     debts = worksheet.col_values(9)[1:]
     to_send = []
     for name, mail, amount, debt in zip(names, mails, amounts, debts):
-        if amount and amount.isdigit() and int(amount) >= min_debt:
+        if amount and amount.isdigit() and int(amount) >= min_debt and int(amount) <= max_debt:
             to_send.append({
                 'nombre': name,
                 'mail': mail,
@@ -71,7 +72,6 @@ def main():
         for d in to_send:
             to = d['mail']
             logging.debug('Sending message to %s ...' % to)
-            to = 'patriciomolina@gmail.com'
             msg = gmail.Message(
                 'Pago de cuotas de Wikimedia Argentina',
                 to=to,
