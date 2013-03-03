@@ -4,6 +4,18 @@ import gmail
 import gspread
 import ConfigParser
 import logging
+import codecs
+
+class FormatMessage(object):
+    message = None
+    def __init__(self, *args, **kwargs):
+        if not self.__class__.message:
+            f = codecs.open('template.html', encoding='utf-8')
+            self.__class__.message = f.read()
+            f.close()
+
+    def get_message(self, d):
+        return self.__class__.message % d
 
 
 def main():
@@ -17,25 +29,53 @@ def main():
     config.read('config.cfg')
     gmail_username = config.get('Gmail', 'username')
     gmail_password = config.get('Gmail', 'password')
-    # if gmail_username and gmail_password:
-    #     logging.debug(
-    #         'Using username "%s" and password "%s" ...'
-    #         % (gmail_username, '*'*len(gmail_password))
-    #     )
-    #     g = gmail.GMail(username=gmail_username, password=gmail_password)
-    #     g.connect()
     spreadsheet_name = config.get('General', 'spreadsheet_name')
     worksheet_name = config.get('General', 'worksheet_name')
+    min_debt = int(config.get('General', 'min_debt'))
     logging.debug(
         'Trying to use worksheet "%s" from spreadsheet "%s" ...'
         % (worksheet_name, spreadsheet_name)
     )
     # Using the same username and password from GMail
-    gc = gspread.login(gmail_username, gmail_password)
-    spreadsheet = gc.open('Nueva planilla de socios de Wikimedia Argentina')
+    gs = gspread.login(gmail_username, gmail_password)
+    spreadsheet = gs.open(spreadsheet_name)
     worksheet = spreadsheet.worksheet(worksheet_name)
-    for col_value in worksheet.col_values(1):
-        print col_value.encode('utf-8')
+    # Here starts a customized behaviour. [1:] avoids header.
+    names = worksheet.col_values(1)[1:]
+    mails = worksheet.col_values(3)[1:]
+    amounts = worksheet.col_values(8)[1:]
+    debts = worksheet.col_values(9)[1:]
+    to_send = []
+    for name, mail, amount, debt in zip(names, mails, amounts, debts):
+        if amount and amount.isdigit() and int(amount) >= min_debt:
+            to_send.append({
+                'nombre': name,
+                'mail': mail,
+                'cuotas': amount,
+                'deuda': debt,
+            })
+    if to_send:
+        fm = FormatMessage()
+        logging.debug(
+            'Logging into GMail using username "%s" and password "%s" ...'
+            % (gmail_username, '*'*len(gmail_password))
+        )
+        gm = gmail.GMail(username=gmail_username, password=gmail_password)
+        gm.connect()
+        for d in to_send:
+            to = d['mail']
+            logging.debug('Sending message to %s ...' % to)
+            to = 'patriciomolina@gmail.com'
+            msg = gmail.Message(
+                'Pago de cuotas de Wikimedia Argentina',
+                to=to,
+                html=fm.get_message(d)
+            )
+            gm.send(msg)
+
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception, e:
+        raise
