@@ -6,8 +6,10 @@ import ConfigParser
 import logging
 import codecs
 
+
 class FormatMessage(object):
     message = None
+
     def __init__(self, *args, **kwargs):
         if not self.__class__.message:
             f = codecs.open('template.html', encoding='utf-8')
